@@ -38,8 +38,9 @@ func Slogin() {
 								Text: "密码",
 							},
 							LineEdit{
-								MinSize:  Size{160, 0},
-								AssignTo: &passwordTE,
+								MinSize:      Size{160, 0},
+								AssignTo:     &passwordTE,
+								PasswordMode: true,
 							},
 						},
 					},
