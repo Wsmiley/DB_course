@@ -13,6 +13,7 @@ func Select() {
 		AssignTo: &mw.MainWindow,
 		Title:    "学生成绩管理系统",
 		MinSize:  Size{270, 290},
+		Size:     Size{270, 290},
 		Layout:   VBox{},
 		Children: []Widget{
 

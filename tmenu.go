@@ -12,6 +12,7 @@ func CreateTeacherMenu() {
 		AssignTo: &mw1.MainWindow,
 		Title:    "菜单选择",
 		MinSize:  Size{600, 400},
+		Size:     Size{600, 400},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
@@ -33,14 +34,14 @@ func CreateTeacherMenu() {
 						},
 					},
 					Action{
-						Text: "&查询/修改学生成绩",
+						Text: "&查询/删除学生成绩",
 						OnTriggered: func() {
 							mw1.Close()
 							Tquery()
 						},
 					},
 					Action{
-						Text: "&删除学生成绩",
+						Text: "&修改学生成绩",
 					},
 				},
 			},

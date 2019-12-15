@@ -4,7 +4,6 @@ import (
 	initiator "DB_course/init"
 	"DB_course/model"
 	"fmt"
-	"sort"
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
@@ -15,6 +14,8 @@ type Condom struct {
 	number  string  //学号
 	name    string  //姓名
 	sorce   float64 //分数
+	cnumber string  //课程号
+
 	checked bool
 }
 type CondomModel struct {
@@ -24,7 +25,6 @@ type CondomModel struct {
 	sortOrder  walk.SortOrder
 	items      []*Condom
 }
-
 type MyMainWindow3 struct {
 	MyMainWindow
 	comCA, comCB, comCC *walk.ComboBox
@@ -35,50 +35,39 @@ type MyMainWindow3 struct {
 func (m *CondomModel) RowCount() int {
 	return len(m.items)
 }
-func (m *CondomModel) Checked(row int) bool {
-	return m.items[row].checked
-}
-
-// Called by the TableView when the user toggled the check box of a given row.
-func (m *CondomModel) SetChecked(row int, checked bool) error {
-	m.items[row].checked = checked
-
-	return nil
-}
 
 // Called by the TableView to sort the model.
 func (m *CondomModel) Sort(col int, order walk.SortOrder) error {
 	m.sortColumn, m.sortOrder = col, order
-
-	sort.SliceStable(m.items, func(i, j int) bool {
-
-		// c := func(ls bool) bool {
-		// 	if m.sortOrder == walk.SortAscending {
-		// 		return ls
-		// 	}
-
-		// 	return !ls
-		// }
-
-		switch m.sortColumn {
-		case 0:
-			// return c(a.Index < b.Index)
-
-		case 1:
-			// return c(a.Bar < b.Bar)
-
-		case 2:
-			// return c(a.Baz < b.Baz)
-
-		case 3:
-			// return c(a.Quux.Before(b.Quux))
-		}
-
-		panic("unreachable")
-	})
-
+	// sort.Stable(m)
 	return m.SorterBase.Sort(col, order)
 }
+
+func (m *CondomModel) Less(i, j int) bool {
+	a, b := m.items[i], m.items[j]
+
+	c := func(ls bool) bool {
+		if m.sortOrder == walk.SortAscending {
+			return ls
+		}
+
+		return !ls
+	}
+
+	switch m.sortColumn {
+	case 0:
+		return c(a.course < b.course)
+
+	case 1:
+		return c(a.name < b.name)
+
+	case 2:
+		return c(a.sorce < b.sorce)
+	}
+
+	panic("unreachable")
+}
+
 func NewCondomModel() *CondomModel {
 	m := new(CondomModel)
 
@@ -90,25 +79,32 @@ func NewCondomModel() *CondomModel {
 // Called by the TableView when it needs the text to display for a given cell.
 func (m *CondomModel) Value(row, col int) interface{} {
 	item := m.items[row]
+	if item != nil {
+		switch col {
+		case 0:
+			return item.course
 
-	switch col {
-	case 0:
-		return item.course
+		case 1:
 
-	case 1:
-		return item.number
+			return item.number
 
-	case 2:
-		return item.name
+		case 2:
+			return item.name
 
-	case 3:
-		return item.sorce
+		case 3:
+			return item.sorce
+		}
+	} else {
+		return ""
 	}
 
 	panic("unexpected col")
 }
+func (m *CondomModel) Swap(i, j int) {
+	m.items[i], m.items[j] = m.items[j], m.items[i]
+}
+
 func Tquery() {
-	// mw1 := new(MyMainWindow3)
 	mw1 := &MyMainWindow3{model: NewCondomModel()}
 	department := make([]string, 2)
 	department = []string{"计算机院", "自动化院"}
@@ -120,6 +116,7 @@ func Tquery() {
 
 	var score1 []model.Score
 	var comdom []*Condom
+
 	if err := (MainWindow{
 		AssignTo: &mw1.MainWindow,
 		Title:    "学生成绩管理系统",
@@ -145,14 +142,14 @@ func Tquery() {
 						},
 					},
 					Action{
-						Text: "&查询/修改学生成绩",
+						Text: "&查询/删除学生成绩",
 						OnTriggered: func() {
 							mw1.Close()
 							Tquery()
 						},
 					},
 					Action{
-						Text: "&删除学生成绩",
+						Text: "&修改学生成绩",
 					},
 				},
 			},
@@ -191,8 +188,13 @@ func Tquery() {
 									fmt.Println(dbError)
 								}
 								coursesdata := make([]string, len(courses1))
-								for _, data := range courses1 {
-									coursesdata = append(coursesdata, data.Name)
+								for i, data := range courses1 {
+									if i == 0 {
+										coursesdata = append(coursesdata[:1], data.Name)
+									} else {
+										coursesdata = append(coursesdata, data.Name)
+									}
+
 								}
 								mw1.comCC.SetModel(coursesdata)
 							}
@@ -218,41 +220,101 @@ func Tquery() {
 						Editable: false,
 					},
 					PushButton{
-						Text: "查询",
+						Text: "查询成绩",
 						OnClicked: func() {
-							if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
-								fmt.Println(dbError)
-							}
-							if dbError := initiator.MSSQL.Table("courses").Where("Name=?", mw1.comCC.Text()).First(&courses).Error; dbError != nil {
-								fmt.Println(dbError)
-							}
-							comdom = make([]*Condom, len(students))
-
-							var count = 0
-							for _, data := range students {
-								if dbError := initiator.MSSQL.Table("scores").Where("Cnumber=? AND Snumber=?", courses[0].Cnumber, data.Snumber).Find(&score1).Error; dbError != nil {
+							if mw1.comCC.Text() != "" {
+								if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
 									fmt.Println(dbError)
-
 								}
-								if score1 != nil {
-									comdom[count] = &Condom{
-										course: courses[0].Name,
-										name:   data.Name,
-										number: data.Snumber,
-										sorce:  score1[0].Score}
-									count++
+								if dbError := initiator.MSSQL.Table("courses").Where("Name=?", mw1.comCC.Text()).First(&courses).Error; dbError != nil {
+									fmt.Println(dbError)
 								}
+								comdom = make([]*Condom, len(students))
+								var count = 0
+								for _, data := range students {
+									dbError := initiator.MSSQL.Where("Cnumber=? AND Snumber=?", courses[0].Cnumber, data.Snumber).Find(&score1).Error
+									if dbError != nil {
+										fmt.Println(dbError)
+									}
+									if score1 != nil {
+										if len(score1) > 0 {
+											comdom[count] = &Condom{
+												course:  courses[0].Name,
+												name:    data.Name,
+												number:  data.Snumber,
+												sorce:   score1[0].Score,
+												cnumber: courses[0].Cnumber}
+											count++
+										}
+									}
+								}
+								mw1.model.items = comdom
+								mw1.model.PublishRowsReset()
+								mw1.tv.SetModel(*mw1.model.items[0])
+							} else {
+								if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
+									fmt.Println(dbError)
+								}
+								if dbError := initiator.MSSQL.Table("courses").Find(&courses).Error; dbError != nil {
+									fmt.Println(dbError)
+								}
+								comdom = make([]*Condom, 100)
+								var count = 0
+								for _, data := range students {
+									dbError := initiator.MSSQL.Where("Snumber=?", data.Snumber).Find(&score1).Error
+									if dbError != nil {
+										fmt.Println(dbError)
+									}
+									if score1 != nil {
+										for _, data1 := range score1 {
+											num := 0
+											for i, data2 := range courses {
+												if data1.Cnumber == data2.Cnumber {
+													num = i
+													break
+												}
+											}
+											comdom[count] = &Condom{
+												course:  courses[num].Name,
+												name:    data.Name,
+												number:  data.Snumber,
+												sorce:   data1.Score,
+												cnumber: data1.Cnumber}
+											count++
+										}
 
+									}
+								}
+								mw1.model.items = comdom
+								mw1.model.PublishRowsReset()
+								mw1.tv.SetModel(*mw1.model.items[0])
 							}
-							mw1.model.items = comdom
-							mw1.model.PublishRowsReset()
-							mw1.tv.SetModel(*mw1.model.items[0])
 						},
 					},
 					PushButton{
 						Text: "删除",
 						OnClicked: func() {
-							walk.MsgBox(tmp, "提示", "删除成功", walk.MsgBoxIconInformation)
+							items := []*Condom{}
+							remove := mw1.tv.SelectedIndexes()
+							for i, x := range mw1.model.items {
+								remove_ok := false
+								for _, j := range remove {
+									if i == j {
+										remove_ok = true
+										if dbError := initiator.MSSQL.Table("scores").Where("Snumber=? AND Cnumber=? ", x.number, x.cnumber).Delete(model.Score{}).Error; dbError != nil {
+											fmt.Println(dbError)
+										}
+									}
+								}
+								if !remove_ok {
+									items = append(items, x)
+								}
+							}
+							mw1.model.items = items
+							mw1.model.PublishRowsReset()
+							mw1.tv.SetSelectedIndexes([]int{})
+							walk.MsgBox(tmp, "警告", "删除成功", walk.MsgBoxIconInformation)
+
 						},
 					},
 				},
@@ -273,6 +335,7 @@ func Tquery() {
 							{Title: "姓名"},
 							{Title: "成绩"},
 						},
+						OnItemActivated: mw1.tv_ItemActivated,
 					},
 				},
 			},
@@ -282,4 +345,11 @@ func Tquery() {
 	}
 	mw1.Run()
 
+}
+func (mw *MyMainWindow3) tv_ItemActivated() {
+	msg := ``
+	for _, i := range mw.tv.SelectedIndexes() {
+		msg = msg + "\n" + mw.model.items[i].name
+	}
+	walk.MsgBox(mw, "title", msg, walk.MsgBoxIconInformation)
 }

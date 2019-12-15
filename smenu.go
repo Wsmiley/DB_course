@@ -6,12 +6,13 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
-func CreateStudentMenu() {
+func CreateStudentMenu(studentnum string) {
 	mw1 := new(MyMainWindow)
 	if err := (MainWindow{
 		AssignTo: &mw1.MainWindow,
 		Title:    "菜单选择",
 		MinSize:  Size{600, 400},
+		Size:     Size{600, 400},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
@@ -19,8 +20,10 @@ func CreateStudentMenu() {
 				Items: []MenuItem{
 					Separator{},
 					Action{
-						Text: "&查询学生成绩",
+						Text: "&查询成绩",
 						OnTriggered: func() {
+							mw1.Close()
+							Squery("202170109")
 						},
 					},
 				},

@@ -15,6 +15,7 @@ func Slogin() {
 		AssignTo: &mw.MainWindow,
 		Title:    "Student grade management system",
 		MinSize:  Size{270, 290},
+		Size:     Size{270, 290},
 		Layout:   VBox{},
 		Children: []Widget{
 			Composite{
@@ -58,12 +59,12 @@ func Slogin() {
 						walk.MsgBox(tmp, "警告", "密码为空", walk.MsgBoxIconInformation)
 						return
 					}
-
+					//db handle
 					var tmp walk.Form
 					walk.MsgBox(tmp, "提示", "欢迎", walk.MsgBoxIconInformation)
 					fmt.Println("Login successful")
 					mw.Close()
-					CreateStudentMenu()
+					CreateStudentMenu("202170109") //accept db ; test accept string
 				},
 			},
 		},

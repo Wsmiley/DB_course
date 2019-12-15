@@ -1,6 +1,8 @@
 package main
 
 import (
+	initiator "DB_course/init"
+	"DB_course/model"
 	"fmt"
 
 	"github.com/lxn/walk"
@@ -15,6 +17,7 @@ func Tlogin() {
 		AssignTo: &mw.MainWindow,
 		Title:    "Student grade management system",
 		MinSize:  Size{270, 290},
+		Size:     Size{300, 300},
 		Layout:   VBox{},
 		Children: []Widget{
 			Composite{
@@ -58,13 +61,13 @@ func Tlogin() {
 						walk.MsgBox(tmp, "警告", "密码为空", walk.MsgBoxIconInformation)
 						return
 					}
-					// var admin model.Admins
-					// if dbError := initiator.MSSQL.Where("Username=? AND Password=?", usernameTE.Text(), passwordTE.Text()).Find(&admin).Error; dbError != nil {
-					// 	walk.MsgBox(tmp, "警告", "用户名/密码错误", walk.MsgBoxIconInformation)
-					// 	return
-					// }
-					// var tmp walk.Form
-					// walk.MsgBox(tmp, "提示", "欢迎"+admin.Name, walk.MsgBoxIconInformation)
+					var admin model.Admins
+					if dbError := initiator.MSSQL.Where("Username=? AND Password=?", usernameTE.Text(), passwordTE.Text()).Find(&admin).Error; dbError != nil {
+						walk.MsgBox(tmp, "警告", "用户名/密码错误", walk.MsgBoxIconInformation)
+						return
+					}
+					var tmp walk.Form
+					walk.MsgBox(tmp, "提示", "欢迎"+admin.Name, walk.MsgBoxIconInformation)
 					fmt.Println("Login successful")
 					mw.Close()
 					CreateTeacherMenu()

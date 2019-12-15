@@ -44,6 +44,7 @@ func AddStudentSorce() {
 		AssignTo: &mw1.MainWindow,
 		Title:    "添加学生考试成绩",
 		MinSize:  Size{600, 400},
+		Size:     Size{600, 400},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
@@ -51,7 +52,7 @@ func AddStudentSorce() {
 				Items: []MenuItem{
 					Separator{},
 					Action{
-						Text: "&添加学生成绩",
+						Text: "&添加学生信息",
 						OnTriggered: func() {
 							mw1.Close()
 							AddStudent()
@@ -61,7 +62,7 @@ func AddStudentSorce() {
 						Text: "&添加学生成绩",
 					},
 					Action{
-						Text: "&查询学生成绩",
+						Text: "&查询/删除学生成绩",
 
 						OnTriggered: func() {
 							mw1.Close()
@@ -70,9 +71,6 @@ func AddStudentSorce() {
 					},
 					Action{
 						Text: "&修改学生成绩",
-					},
-					Action{
-						Text: "&删除学生成绩",
 					},
 				},
 			},
@@ -120,23 +118,31 @@ func AddStudentSorce() {
 				Editable: false,
 				OnCurrentIndexChanged: func() {
 					if mw1.comCB.Text() != "" {
-
 						if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
 							fmt.Println(dbError)
 						}
 						classdata := make([]string, len(students))
-						for _, data := range students {
-							classdata = append(classdata, data.Name)
+						for i, data := range students {
+							if i == 0 {
+								classdata = append(classdata[:i], data.Name)
+							} else {
+								classdata = append(classdata, data.Name)
+							}
+
 						}
 
 						if dbError := initiator.MSSQL.Table("courses").Find(&courses).Error; dbError != nil {
 							fmt.Println(dbError)
 						}
 						coursesdata := make([]string, len(courses))
-						for _, data := range courses {
-							coursesdata = append(coursesdata, data.Name)
-						}
+						for i, data := range courses {
+							if i == 0 {
+								coursesdata = append(coursesdata[:i], data.Name)
+							} else {
+								coursesdata = append(coursesdata, data.Name)
+							}
 
+						}
 						mw1.comCC.SetModel(classdata)
 						mw1.comCD.SetModel(coursesdata)
 					}
@@ -174,9 +180,10 @@ func AddStudentSorce() {
 						return
 					}
 					var score = model.Score{
-						Snumber: students[mw1.comCC.CurrentIndex()-3].Snumber,
-						Cnumber: courses[mw1.comCD.CurrentIndex()-4].Cnumber,
+						Snumber: students[mw1.comCC.CurrentIndex()].Snumber,
+						Cnumber: courses[mw1.comCD.CurrentIndex()].Cnumber,
 						Score:   mw1.cnumA.Value()}
+
 					initiator.MSSQL.Create(&score)
 					walk.MsgBox(tmp, "提示", "提交成功", walk.MsgBoxIconInformation)
 					fmt.Println(" successfully added")
