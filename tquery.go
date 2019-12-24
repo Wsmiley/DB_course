@@ -179,12 +179,23 @@ func Tquery() {
 						Editable: false,
 						Model:    department,
 						OnCurrentIndexChanged: func() {
-							if mw1.comCA.Text() == "计算机院" {
-								classdata := make([]string, 2)
-								classdata = []string{"计算机171", "计算机172"}
-								mw1.comCB.SetModel(classdata)
+							if mw1.comCA.Text() != "" {
+								var classdata []model.Class
+								if dbError := initiator.MSSQL.Where("Deptment=?", mw1.comCA.Text()).Find(&classdata).Error; dbError != nil {
+									fmt.Println(dbError)
+								}
+								class := make([]string, len(classdata))
+								for i, data := range classdata {
+									if i == 0 {
+										class = append(class[:i], data.ClassName)
+									} else {
+										class = append(class, data.ClassName)
+									}
+
+								}
+								mw1.comCB.SetModel(class)
 								var courses1 []model.Course
-								if dbError := initiator.MSSQL.Table("courses").Find(&courses1).Error; dbError != nil {
+								if dbError := initiator.MSSQL.Table("courses").Where("Deptment=?", mw1.comCA.Text()).Find(&courses1).Error; dbError != nil {
 									fmt.Println(dbError)
 								}
 								coursesdata := make([]string, len(courses1))
@@ -194,14 +205,8 @@ func Tquery() {
 									} else {
 										coursesdata = append(coursesdata, data.Name)
 									}
-
 								}
 								mw1.comCC.SetModel(coursesdata)
-							}
-							if mw1.comCA.Text() == "自动化院" {
-								classdata := make([]string, 2)
-								classdata = []string{"自动化171", "自动化172"}
-								mw1.comCB.SetModel(classdata)
 							}
 						},
 					},
@@ -222,8 +227,16 @@ func Tquery() {
 					PushButton{
 						Text: "查询成绩",
 						OnClicked: func() {
+							if mw1.comCA.Text() == "" {
+								walk.MsgBox(tmp, "警告", "请选择院系", walk.MsgBoxIconInformation)
+								return
+							}
+							if mw1.comCB.Text() == "" {
+								walk.MsgBox(tmp, "警告", "请选择班级", walk.MsgBoxIconInformation)
+								return
+							}
 							if mw1.comCC.Text() != "" {
-								if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
+								if dbError := initiator.MSSQL.Table("students").Where("Class=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
 									fmt.Println(dbError)
 								}
 								if dbError := initiator.MSSQL.Table("courses").Where("Name=?", mw1.comCC.Text()).First(&courses).Error; dbError != nil {
@@ -252,7 +265,7 @@ func Tquery() {
 								mw1.model.PublishRowsReset()
 								mw1.tv.SetModel(*mw1.model.items[0])
 							} else {
-								if dbError := initiator.MSSQL.Table("students").Where("Classe=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
+								if dbError := initiator.MSSQL.Table("students").Where("Class=?", mw1.comCB.Text()).Find(&students).Error; dbError != nil {
 									fmt.Println(dbError)
 								}
 								if dbError := initiator.MSSQL.Table("courses").Find(&courses).Error; dbError != nil {
@@ -282,7 +295,6 @@ func Tquery() {
 												cnumber: data1.Cnumber}
 											count++
 										}
-
 									}
 								}
 								mw1.model.items = comdom

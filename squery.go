@@ -28,6 +28,7 @@ type MyMainWindow4 struct {
 	comCA, comCB, comCC *walk.ComboBox
 	model               *CondomStudentModel
 	tv                  *walk.TableView
+	lA, lB              *walk.Label
 }
 
 func (m *CondomStudentModel) RowCount() int {
@@ -37,7 +38,6 @@ func (m *CondomStudentModel) RowCount() int {
 // Called by the TableView to sort the model.
 func (m *CondomStudentModel) Sort(col int, order walk.SortOrder) error {
 	m.sortColumn, m.sortOrder = col, order
-	// sort.Stable(m)
 	return m.SorterBase.Sort(col, order)
 }
 
@@ -96,17 +96,22 @@ func Squery(studentnum string) {
 	var comdom []*CondomStudent
 	var score1 []model.Score
 	var courses []model.Course
-
 	if err := (MainWindow{
 		AssignTo: &mw1.MainWindow,
 		Title:    "学生成绩管理系统",
-		Size:     Size{800, 600},
+		Size:     Size{400, 400},
 		Layout:   VBox{},
 		MenuItems: []MenuItem{
 			Menu{
 				Text: "&学生菜单",
 				Items: []MenuItem{
 					Separator{},
+					Action{
+						Text: "&个人信息",
+						OnTriggered: func() {
+							Sinformation(studentnum)
+						},
+					},
 					Action{
 						Text: "&查询成绩",
 					},
@@ -131,17 +136,19 @@ func Squery(studentnum string) {
 				Children: []Widget{
 					HSpacer{},
 					Label{
-						Text: "姓名:" + "陈威",
+						AssignTo: &mw1.lA,
+						Text:     "",
 					},
 
 					Label{
-						Text: "班级:" + "计算机172",
+						AssignTo: &mw1.lB,
+						Text:     "",
 					},
 					PushButton{
 						Text: "查询成绩",
 						OnClicked: func() {
 							comdom = make([]*CondomStudent, 20)
-							if dbError := initiator.MSSQL.Where("Snumber=?", "202170109").Find(&score1).Error; dbError != nil {
+							if dbError := initiator.MSSQL.Where("Snumber=?", studentnum).Find(&score1).Error; dbError != nil {
 								fmt.Println(dbError)
 							}
 							if dbError := initiator.MSSQL.Table("courses").Find(&courses).Error; dbError != nil {
@@ -159,7 +166,6 @@ func Squery(studentnum string) {
 										}
 									}
 								}
-
 							}
 							mw1.model.items = comdom
 							mw1.model.PublishRowsReset()

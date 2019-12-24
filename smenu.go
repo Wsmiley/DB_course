@@ -20,10 +20,16 @@ func CreateStudentMenu(studentnum string) {
 				Items: []MenuItem{
 					Separator{},
 					Action{
+						Text: "&个人信息",
+						OnTriggered: func() {
+							Sinformation(studentnum)
+						},
+					},
+					Action{
 						Text: "&查询成绩",
 						OnTriggered: func() {
 							mw1.Close()
-							Squery("202170109")
+							Squery(studentnum)
 						},
 					},
 				},

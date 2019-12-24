@@ -5,5 +5,4 @@ type Score struct {
 	Cnumber string  `gorm:";ForeignKey:CourseId;not null"`  //课程号
 	Snumber string  `gorm:";ForeignKey:StudentId;not null"` //学生学号
 	Score   float64 `gorm:"not null"`                       //成绩
-
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	initiator "DB_course/init"
+	"DB_course/model"
 	"fmt"
 
 	"github.com/lxn/walk"
@@ -61,11 +63,16 @@ func Slogin() {
 						return
 					}
 					//db handle
+					var student model.StudentCount
+					if dbError := initiator.MSSQL.Where("Username=? AND Password=?", usernameTE.Text(), passwordTE.Text()).Find(&student).Error; dbError != nil {
+						walk.MsgBox(tmp, "警告", "用户名/密码错误", walk.MsgBoxIconInformation)
+						return
+					}
 					var tmp walk.Form
-					walk.MsgBox(tmp, "提示", "欢迎", walk.MsgBoxIconInformation)
+					walk.MsgBox(tmp, "提示", "欢迎"+student.Name, walk.MsgBoxIconInformation)
 					fmt.Println("Login successful")
 					mw.Close()
-					CreateStudentMenu("202170109") //accept db ; test accept string
+					CreateStudentMenu(student.Username) //accept db ; test accept string
 				},
 			},
 		},

@@ -94,16 +94,21 @@ func AddStudent() {
 				Editable: false,
 				Model:    department,
 				OnCurrentIndexChanged: func() {
-					//因从数据库中提取数据，再做修改
-					if mw1.comCA.Text() == "计算机院" {
-						classdata := make([]string, 2)
-						classdata = []string{"计算机171", "计算机172"}
-						mw1.comCB.SetModel(classdata)
-					}
-					if mw1.comCA.Text() == "自动化院" {
-						classdata := make([]string, 2)
-						classdata = []string{"自动化171", "自动化172"}
-						mw1.comCB.SetModel(classdata)
+					if mw1.comCA.Text() != "" {
+						var classdata []model.Class
+						if dbError := initiator.MSSQL.Where("Deptment=?", mw1.comCA.Text()).Find(&classdata).Error; dbError != nil {
+							fmt.Println(dbError)
+						}
+						class := make([]string, len(classdata))
+						for i, data := range classdata {
+							if i == 0 {
+								class = append(class[:i], data.ClassName)
+							} else {
+								class = append(class, data.ClassName)
+							}
+
+						}
+						mw1.comCB.SetModel(class)
 					}
 				},
 			},
@@ -150,7 +155,7 @@ func AddStudent() {
 					var student = model.Student{
 						Snumber: mw1.num.Text(),
 						Name:    mw1.name.Text(),
-						Classe:  mw1.comCB.Text(),
+						Class:   mw1.comCB.Text(),
 						Sex:     mw1.comCC.Text(),
 						Dept:    mw1.comCA.Text()}
 					initiator.MSSQL.Create(&student)
