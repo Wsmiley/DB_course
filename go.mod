@@ -8,5 +8,6 @@ require (
 	github.com/jinzhu/gorm v1.9.11
 	github.com/lxn/walk v0.0.0-20191128110447-55ccb3a9f5c1
 	github.com/lxn/win v0.0.0-20191128105842-2da648fda5b4 // indirect
+	github.com/tealeg/xlsx v1.0.5
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
 )

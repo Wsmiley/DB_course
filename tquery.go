@@ -100,6 +100,7 @@ func (m *CondomModel) Value(row, col int) interface{} {
 
 	panic("unexpected col")
 }
+
 func (m *CondomModel) Swap(i, j int) {
 	m.items[i], m.items[j] = m.items[j], m.items[i]
 }
@@ -327,6 +328,12 @@ func Tquery() {
 							mw1.tv.SetSelectedIndexes([]int{})
 							walk.MsgBox(tmp, "警告", "删除成功", walk.MsgBoxIconInformation)
 
+						},
+					},
+					PushButton{
+						Text: "创建Excel",
+						OnClicked: func() {
+							CreateExcel(mw1.model.items)
 						},
 					},
 				},
